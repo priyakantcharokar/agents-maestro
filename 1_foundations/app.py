@@ -120,7 +120,7 @@ class Me:
 
     # -- chat function (Gradio expects signature: message, history) --
     QUICK_FOLLOWUPS = [
-    "Could you outline Priyakant's most recent AI project?",
+    "How did SMP at IIM Calcutta shape Priyakant’s leadership style?",
     "What certification does Priyakant value the most and why?",
     "Which industry challenge excites Priyakant right now?",
     "How does he keep his team motivated during large programmes?",
