@@ -155,10 +155,14 @@ demo = gr.ChatInterface(
         type="messages",
     ),
     title="Ask Priyakant Charokar",
-    description="🤝 I'm Priyakant's digital assistant. Ask anything about his work, skills, or how he can help you!",
+    description="<div style='text-align: center;'>🤝 I'm Priyakant's digital assistant. Ask anything about his work, skills, or how he can help you!</div>",
     theme=gr.themes.Soft(
-        primary_hue="indigo",
-        secondary_hue="gray",
+        primary_hue="amber",
+        secondary_hue="amber",
+        neutral_hue="slate",
+        background_fill_primary="#000000",
+        background_fill_secondary="#1a1a1a",
+        text_color="#FFD700",
         font=["Inter", "sans-serif"],
     ),
     examples=[
