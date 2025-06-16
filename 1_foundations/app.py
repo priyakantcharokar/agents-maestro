@@ -77,13 +77,19 @@ class Me:
 
     def __init__(self):
         self.openai = OpenAI()
-        self.name = "Ed Donner"
+        self.name = "Priyakant Charokar"
         reader = PdfReader("me/linkedin.pdf")
         self.linkedin = ""
         for page in reader.pages:
             text = page.extract_text()
             if text:
                 self.linkedin += text
+        reader = PdfReader("me/PriyakantCharokar.pdf")
+        self.resume = ""
+        for page in reader.pages:
+            text = page.extract_text()
+            if text:
+                self.resume += text
         with open("me/summary.txt", "r", encoding="utf-8") as f:
             self.summary = f.read()
 
@@ -108,7 +114,7 @@ Be professional and engaging, as if talking to a potential client or future empl
 If you don't know the answer to any question, use your record_unknown_question tool to record the question that you couldn't answer, even if it's about something trivial or unrelated to career. \
 If the user is engaging in discussion, try to steer them towards getting in touch via email; ask for their email and record it using your record_user_details tool. "
 
-        system_prompt += f"\n\n## Summary:\n{self.summary}\n\n## LinkedIn Profile:\n{self.linkedin}\n\n"
+        system_prompt += f"\n\n## Summary:\n{self.summary}\n\n## LinkedIn Profile:\n{self.linkedin}\n\n## Resume:\n{self.resume}\n\n"
         system_prompt += f"With this context, please chat with the user, always staying in character as {self.name}."
         return system_prompt
     
@@ -130,5 +136,29 @@ If the user is engaging in discussion, try to steer them towards getting in touc
 
 if __name__ == "__main__":
     me = Me()
-    gr.ChatInterface(me.chat, type="messages").launch()
+    # gr.ChatInterface(me.chat, type="messages").launch()
+    gr.ChatInterface(
+    fn=me.chat,
+    type="messages",
+    chatbot=gr.Chatbot(
+        label="Ask Priyakant 🤖",
+        avatar_images=("🧑‍💼", "🤖"),
+        show_copy_button=True,
+        type="messages"
+    ),
+    title="Ask Priyakant Charokar",
+    description="🤝 Hello! I'm Priyakant's digital assistant. Ask me anything about his career, skills, experience, or how he can help your organization.",
+    theme=gr.themes.Soft(
+        primary_hue="indigo",
+        secondary_hue="gray",
+        font=["Inter", "sans-serif"],
+    ),
+    examples=[
+        ["What industries has Priyakant worked with as a lead architect?"],
+        ["How has Priyakant applied Generative AI in real-world enterprise projects?"],
+        ["Can you describe Priyakant's approach to building intelligent data platforms?"],
+        ["What leadership experience does Priyakant bring to digital transformation programs?"],
+        ["How can I collaborate with Priyakant on a cloud-native or AI-driven initiative?"]
+    ],
+)
     
