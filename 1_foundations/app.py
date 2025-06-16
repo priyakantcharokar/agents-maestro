@@ -156,9 +156,9 @@ class Me:
         followup_html += "<strong>You could also ask:</strong><ul style='margin-top:4px;'>"
         for q in self.QUICK_FOLLOWUPS:
             followup_html += f"<li>{q}</li>"
-        followup_html += "</ul>"
-
-        return reply + followup_html
+        followup_html += "</ul>" 
+        # reply + followup_html dont show followup_html for now
+        return reply
 
 # -------------------------------------------------------------------
 # 6. Build Gradio interface  (exposed as `demo`)
