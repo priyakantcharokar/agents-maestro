@@ -189,11 +189,11 @@ demo = gr.ChatInterface(
     ["What certifications or technical credentials does Priyakant hold?"],
     ["How does Priyakant's background align with senior technology leadership roles?"],
     ["Can you share highlights from his Senior Management Program at IIM Calcutta?"],
-    ["What industries has Priyakant delivered strategic architecture solutions for?"],
-    ["Does Priyakant publish thought leadership articles or technical blogs?"],
-    ["How does Priyakant mentor teams or contribute to capability building?"],
-    ["What is Priyakant's approach to cross-functional stakeholder communication?"],
-    ["How can I connect with Priyakant to explore a leadership opportunity?"]
+    # ["What industries has Priyakant delivered strategic architecture solutions for?"],
+    # ["Does Priyakant publish thought leadership articles or technical blogs?"],
+    # ["How does Priyakant mentor teams or contribute to capability building?"],
+    # ["What is Priyakant's approach to cross-functional stakeholder communication?"],
+    # ["How can I connect with Priyakant to explore a leadership opportunity?"]
 ],
 )
 
