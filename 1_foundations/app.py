@@ -149,7 +149,8 @@ demo = gr.ChatInterface(
     type="messages",
     chatbot=gr.Chatbot(
         label="Ask Priyakant 🤖",
-        avatar_images=("🧑‍💼", "🤖"),
+        # avatar_images=("🧑‍💼", "🤖"),
+        avatar_images=("user.png", "bot.png"),
         show_copy_button=True,
         type="messages",
     ),
