@@ -160,8 +160,6 @@ demo = gr.ChatInterface(
         primary_hue="amber",
         secondary_hue="amber",
         neutral_hue="slate",
-        background_fill_primary="#000000",
-        background_fill_secondary="#1a1a1a",
         text_color="#FFD700",
         font=["Inter", "sans-serif"],
     ),
