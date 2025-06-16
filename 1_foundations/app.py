@@ -175,7 +175,7 @@ demo = gr.ChatInterface(
         show_copy_button=True,
         type="messages"
     ),
-    title="Know more about Priyakant, professionally 😉",
+    title="Know more about Priyakant,.. Professionally 😉",
     description="<div style='text-align: center;'>🤝 I'm Priyakant's digital assistant. Ask anything about his work, skills, or how he can help you!</div>",
     theme=gr.themes.Soft(
         primary_hue="indigo",
