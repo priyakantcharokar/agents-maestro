@@ -1,153 +1,160 @@
+# app.py  – put this in the root of your Space repo
+import json, os, requests
+from pathlib import Path
+
+import gradio as gr
 from dotenv import load_dotenv
 from openai import OpenAI
-import json
-import os
-import requests
 from pypdf import PdfReader
-import gradio as gr
 
+# -------------------------------------------------------------------
+# 1. ENV ­– works locally (.env) and on HF Spaces (Secrets tab)
+# -------------------------------------------------------------------
+load_dotenv(override=True)          # noop on Spaces unless you add a .env
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
-load_dotenv(override=True)
+# -------------------------------------------------------------------
+# 2. PUSHOVER helper  (optional – remove if unused)
+# -------------------------------------------------------------------
+def push(text: str):
+    """Send a quick push notification (Pushover)."""
+    if os.getenv("PUSHOVER_TOKEN") and os.getenv("PUSHOVER_USER"):
+        requests.post(
+            "https://api.pushover.net/1/messages.json",
+            data={
+                "token": os.getenv("PUSHOVER_TOKEN"),
+                "user": os.getenv("PUSHOVER_USER"),
+                "message": text,
+            },
+            timeout=10,
+        )
 
-def push(text):
-    requests.post(
-        "https://api.pushover.net/1/messages.json",
-        data={
-            "token": os.getenv("PUSHOVER_TOKEN"),
-            "user": os.getenv("PUSHOVER_USER"),
-            "message": text,
-        }
-    )
-
-
+# -------------------------------------------------------------------
+# 3. Tool functions + JSON specs
+# -------------------------------------------------------------------
 def record_user_details(email, name="Name not provided", notes="not provided"):
-    push(f"Recording {name} with email {email} and notes {notes}")
-    return {"recorded": "ok"}
+    push(f"Recording {name} ({email}) • {notes}")
+    return {"status": "saved"}
 
 def record_unknown_question(question):
-    push(f"Recording {question}")
-    return {"recorded": "ok"}
+    push(f"Unknown question logged: {question}")
+    return {"status": "logged"}
 
 record_user_details_json = {
     "name": "record_user_details",
-    "description": "Use this tool to record that a user is interested in being in touch and provided an email address",
+    "description": "Store user-supplied contact info",
     "parameters": {
         "type": "object",
         "properties": {
-            "email": {
-                "type": "string",
-                "description": "The email address of this user"
-            },
-            "name": {
-                "type": "string",
-                "description": "The user's name, if they provided it"
-            }
-            ,
-            "notes": {
-                "type": "string",
-                "description": "Any additional information about the conversation that's worth recording to give context"
-            }
+            "email": {"type": "string", "description": "User's email address"},
+            "name":  {"type": "string", "description": "User's name (if given)"},
+            "notes": {"type": "string", "description": "Extra context"},
         },
         "required": ["email"],
-        "additionalProperties": False
-    }
+        "additionalProperties": False,
+    },
 }
 
 record_unknown_question_json = {
     "name": "record_unknown_question",
-    "description": "Always use this tool to record any question that couldn't be answered as you didn't know the answer",
+    "description": "Log any question the assistant couldn't answer",
     "parameters": {
         "type": "object",
         "properties": {
-            "question": {
-                "type": "string",
-                "description": "The question that couldn't be answered"
-            },
+            "question": {"type": "string", "description": "The unanswered question"},
         },
         "required": ["question"],
-        "additionalProperties": False
-    }
+        "additionalProperties": False,
+    },
 }
 
-tools = [{"type": "function", "function": record_user_details_json},
-        {"type": "function", "function": record_unknown_question_json}]
+tools = [
+    {"type": "function", "function": record_user_details_json},
+    {"type": "function", "function": record_unknown_question_json},
+]
 
+# -------------------------------------------------------------------
+# 4. Helpers
+# -------------------------------------------------------------------
+def pdf_to_text(pdf_path: Path) -> str:
+    """Concatenate all pages of a PDF into one string."""
+    reader = PdfReader(str(pdf_path))
+    return "".join(page.extract_text() or "" for page in reader.pages)
 
+# -------------------------------------------------------------------
+# 5. Main class
+# -------------------------------------------------------------------
 class Me:
-
     def __init__(self):
-        self.openai = OpenAI()
-        self.name = "Priyakant Charokar"
-        reader = PdfReader("me/linkedin.pdf")
-        self.linkedin = ""
-        for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                self.linkedin += text
-        reader = PdfReader("me/PriyakantCharokar.pdf")
-        self.resume = ""
-        for page in reader.pages:
-            text = page.extract_text()
-            if text:
-                self.resume += text
-        with open("me/summary.txt", "r", encoding="utf-8") as f:
-            self.summary = f.read()
+        self.openai = OpenAI(api_key=OPENAI_API_KEY)
+        self.name   = "Priyakant Charokar"
 
+        base = Path(__file__).parent / "me"          # me/ folder next to app.py
+        self.linkedin = pdf_to_text(base / "linkedin.pdf")
+        self.resume   = pdf_to_text(base / "PriyakantCharokar.pdf")
+        self.summary  = (base / "summary.txt").read_text(encoding="utf-8")
 
-    def handle_tool_call(self, tool_calls):
-        results = []
-        for tool_call in tool_calls:
-            tool_name = tool_call.function.name
-            arguments = json.loads(tool_call.function.arguments)
-            print(f"Tool called: {tool_name}", flush=True)
-            tool = globals().get(tool_name)
-            result = tool(**arguments) if tool else {}
-            results.append({"role": "tool","content": json.dumps(result),"tool_call_id": tool_call.id})
-        return results
-    
-    def system_prompt(self):
-        system_prompt = f"You are acting as {self.name}. You are answering questions on {self.name}'s website, \
-particularly questions related to {self.name}'s career, background, skills and experience. \
-Your responsibility is to represent {self.name} for interactions on the website as faithfully as possible. \
-You are given a summary of {self.name}'s background and LinkedIn profile which you can use to answer questions. \
-Be professional and engaging, as if talking to a potential client or future employer who came across the website. \
-If you don't know the answer to any question, use your record_unknown_question tool to record the question that you couldn't answer, even if it's about something trivial or unrelated to career. \
-If the user is engaging in discussion, try to steer them towards getting in touch via email; ask for their email and record it using your record_user_details tool. "
+    # -- build prompt ------------------------------------------------
+    def system_prompt(self) -> str:
+        return (
+            f"You are acting as {self.name}. Answer questions about his career, "
+            f"skills, and experience professionally and engagingly.\n\n"
+            f"## Summary:\n{self.summary}\n\n"
+            f"## LinkedIn Profile:\n{self.linkedin}\n\n"
+            f"## Resume:\n{self.resume}\n\n"
+            "If unsure of an answer, call record_unknown_question. "
+            "If the user seems interested in contact, ask for their email and call record_user_details."
+        )
 
-        system_prompt += f"\n\n## Summary:\n{self.summary}\n\n## LinkedIn Profile:\n{self.linkedin}\n\n## Resume:\n{self.resume}\n\n"
-        system_prompt += f"With this context, please chat with the user, always staying in character as {self.name}."
-        return system_prompt
-    
+    # -- tool-call handler -------------------------------------------
+    def _handle_tool_calls(self, tool_calls):
+        responses = []
+        for tc in tool_calls:
+            fn = globals().get(tc.function.name)
+            args = json.loads(tc.function.arguments)
+            out  = fn(**args) if fn else {}
+            responses.append(
+                {"role": "tool", "tool_call_id": tc.id, "content": json.dumps(out)}
+            )
+        return responses
+
+    # -- chat function (Gradio expects signature: message, history) --
     def chat(self, message, history):
-        messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
-        done = False
-        while not done:
-            response = self.openai.chat.completions.create(model="gpt-4o-mini", messages=messages, tools=tools)
-            if response.choices[0].finish_reason=="tool_calls":
-                message = response.choices[0].message
-                tool_calls = message.tool_calls
-                results = self.handle_tool_call(tool_calls)
-                messages.append(message)
-                messages.extend(results)
-            else:
-                done = True
-        return response.choices[0].message.content
-    
+        msgs = (
+            [{"role": "system", "content": self.system_prompt()}]
+            + history
+            + [{"role": "user", "content": message}]
+        )
 
-if __name__ == "__main__":
-    me = Me()
-    # gr.ChatInterface(me.chat, type="messages").launch()
-    gr.ChatInterface(
+        while True:
+            resp = self.openai.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=msgs,
+                tools=tools,
+            )
+            if resp.choices[0].finish_reason == "tool_calls":
+                assistant_msg = resp.choices[0].message
+                msgs.append(assistant_msg)
+                msgs.extend(self._handle_tool_calls(assistant_msg.tool_calls))
+            else:
+                return resp.choices[0].message.content
+
+# -------------------------------------------------------------------
+# 6. Build Gradio interface  (exposed as `demo`)
+# -------------------------------------------------------------------
+me = Me()
+
+demo = gr.ChatInterface(
     fn=me.chat,
     type="messages",
     chatbot=gr.Chatbot(
         label="Ask Priyakant 🤖",
         avatar_images=("🧑‍💼", "🤖"),
         show_copy_button=True,
-        type="messages"
+        type="messages",
     ),
     title="Ask Priyakant Charokar",
-    description="🤝 Hello! I'm Priyakant's digital assistant. Ask me anything about his career, skills, experience, or how he can help your organization.",
+    description="🤝 I'm Priyakant's digital assistant. Ask anything about his work, skills, or how he can help you!",
     theme=gr.themes.Soft(
         primary_hue="indigo",
         secondary_hue="gray",
@@ -155,10 +162,15 @@ if __name__ == "__main__":
     ),
     examples=[
         ["What industries has Priyakant worked with as a lead architect?"],
-        ["How has Priyakant applied Generative AI in real-world enterprise projects?"],
-        ["Can you describe Priyakant's approach to building intelligent data platforms?"],
-        ["What leadership experience does Priyakant bring to digital transformation programs?"],
-        ["How can I collaborate with Priyakant on a cloud-native or AI-driven initiative?"]
+        ["How has Priyakant applied Generative AI in enterprise projects?"],
+        ["Describe his approach to intelligent data platforms."],
+        ["What leadership roles has he held in digital-transformation programs?"],
+        ["How can I collaborate with him on a cloud-native initiative?"],
     ],
 )
-    
+
+# -------------------------------------------------------------------
+# 7. Local dev launcher  (HF Spaces auto-launches `demo`)
+# -------------------------------------------------------------------
+if __name__ == "__main__":
+    demo.launch()
