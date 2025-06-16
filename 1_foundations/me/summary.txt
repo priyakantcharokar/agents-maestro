@@ -1,2 +1,9 @@
-My name is Ed Donner. I'm an entrepreneur, software engineer and data scientist. I'm originally from London, England, but I moved to NYC in 2000.
-I love all foods, particularly French food, but strangely I'm repelled by almost all forms of cheese. I'm not allergic, I just hate the taste! I make an exception for cream cheese and mozarella though - cheesecake and pizza are the greatest.
+I'm Priyakant Charokar. I bring over 21 years of experience in IT, currently serving as a Lead Architect. My expertise spans enterprise architecture, cloud strategy, and data platforms. I’ve been deeply involved in Data, AI, and ML projects—focusing on building intelligent systems and enabling data-driven decision-making. More recently, I’ve been exploring Generative AI and Agentic AI use cases, especially in finance and HR.
+
+I’m passionate about learning and constantly upskilling—earning certifications across cloud, data, and AI technologies. This learning mindset also led me to pursue the Senior Management Program at IIM Calcutta (SMP – 2025), where I’m sharpening my strategic and leadership abilities.
+
+I currently lead a team supporting 90+ developers across 4 verticals and mentor 14+ architects and senior engineers. I’ve led large-scale modernization efforts, implemented FinOps practices, and migrated legacy systems to scalable microservices on AWS, GCP, and Azure.
+
+My project experience includes leading digital transformation at global firms like SBI, Nordea, HSBC, and working as an architect with the Cathay Pacific Innovation Centre, driving forward-thinking technology solutions.
+
+I love aligning technology with business impact—solving complex problems, mentoring teams, and delivering secure, scalable systems that create real enterprise value.
